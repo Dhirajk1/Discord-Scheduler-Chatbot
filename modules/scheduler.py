@@ -3,7 +3,7 @@ Class represnting a schduler.
 This will encapulsate teh avialble for ONE user
 '''
 from typing import List
-from modules.utilities import Availability, convert_idx_time
+from .utilities import Availability, convert_idx_time
 
 
 class Schedule():
