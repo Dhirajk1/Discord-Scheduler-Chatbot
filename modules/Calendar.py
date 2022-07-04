@@ -1,8 +1,8 @@
 '''
 A calendar class to represent the availability of ALL users.
 '''
-from scheduler import Schedule
-from utilities import Timeslot, convert_idx_time, Availability
+from modules.scheduler import Schedule
+from modules.utilities import Timeslot, convert_idx_time, Availability
 
 
 class Calendar():
