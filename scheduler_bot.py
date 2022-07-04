@@ -1,12 +1,12 @@
 '''
 Discord interface for the scheduler bot
 '''
-import datetime
-from datetime import timedelta, timezone
+from datetime import timedelta
 import discord
 from discord.ext import commands
-from discord.ui import Button, View, Select
+from discord.ui import Button, View
 from modules.calendar import Calendar
+from modules.selectors import make_day_selector, make_time_selector, make_event_selector  # pylint: disable=no-name-in-module
 # This is MY PERSONAL TOKEN for the bot :)
 from private.auth import PASSWORD
 
@@ -21,46 +21,6 @@ bot = commands.Bot(intents=intents, command_prefix='>>')
 
 # Creating a calendar object for storing data
 bot.calendar = Calendar()
-
-
-# ================ Helper Functions ================= #
-def make_day_selector():
-    '''
-    Creating a selector for each day of the weeks (Monday to Sunday)
-    '''
-    selector = Select(
-        min_values=1,
-        max_values=1,
-        placeholder='Pick Day',
-    )
-
-    for day in ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']:
-        selector.add_option(label=day)
-
-    return selector
-
-
-def make_time_selector():
-    '''
-    Creating a selector for each hour increment(00:00 to 23:00)
-    '''
-    selector = Select(
-        max_values=24,
-        placeholder='Pick Time',
-    )
-
-    for i in range(24):
-        start_str = str(i)
-        if len(start_str) < 2:
-            start_str = '0' + start_str
-        end_str = str(i+1) if i != 23 else '0'
-        if len(end_str) < 2:
-            end_str = '0' + end_str
-        selector.add_option(
-            label=f'{start_str}:00 to {end_str}:00',
-            value=i)
-
-    return selector
 
 
 # ================ Commands ================= #
@@ -146,21 +106,13 @@ async def schedule(ctx):
     '''
     Selector to choose an event time
     '''
-    timeslots = bot.calendar.find_best()
     view = View()
+    timeslots = bot.calendar.find_best()
     if not timeslots:
         await ctx.send('No Entered Data', view=view)
         return
 
-    selector = Select(
-        min_values=1,
-        max_values=1,
-        placeholder='Schedule your event',
-    )
-    for i, timeslot in enumerate(timeslots):
-        selector.add_option(
-            label=timeslot.to_string(),
-            value=i)
+    selector = make_event_selector(timeslots)
 
     view.add_item(selector)
 

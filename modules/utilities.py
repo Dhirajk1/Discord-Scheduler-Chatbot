@@ -32,7 +32,7 @@ class Timeslot:
         now = datetime.datetime.now(timezone('US/Eastern'))
         needed_day = days_to_int[self.day]
         time = (now + timedelta(days=abs(now.weekday() - needed_day)
-                               )).replace(hour=int(self.time[:2]), minute=0, second=0)
+                                )).replace(hour=int(self.time[:2]), minute=0, second=0)
         return time if time > now else time + timedelta(days=7)
 
 
