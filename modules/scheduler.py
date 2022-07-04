@@ -1,5 +1,5 @@
 '''
-Class represnting a schduler.
+Class representing a schduler.
 This will encapulsate teh avialble for ONE user
 '''
 from typing import List

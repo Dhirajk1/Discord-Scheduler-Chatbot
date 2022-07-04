@@ -72,13 +72,10 @@ class Calendar():
                     if status == Availability.FREE:
                         self.master[day][i] += 1
 
-    def find_best(self) -> str:
+    def find_best(self) -> list[Timeslot]:
         '''
         Find the best timeslot to schedule a user
         '''
-        if self.people == 0:
-            return 'No Responses'
-
         rankings = []
         for day, status in self.master.items():
             for time, count in enumerate(status):
@@ -86,11 +83,16 @@ class Calendar():
                     rankings.append(
                         Timeslot(day, convert_idx_time(time), count)
                     )
+        rankings.sort(key=lambda t: t.count, reverse=True)
+        return rankings
 
+    def best_to_str(self) -> str:
+        '''
+        Transform available times into a string for output
+        '''
+        rankings = self.find_best()
         if not rankings:
             return 'No Available Slots'
-
-        rankings.sort(key=lambda t: t.count, reverse=True)
 
         res = f'Respones = {self.people}\n'
         current = None
