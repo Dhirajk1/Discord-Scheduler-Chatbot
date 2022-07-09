@@ -1,14 +1,16 @@
-'''
+"""
 Discord interface for the scheduler bot
-'''
+"""
 from datetime import timedelta
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
 from modules.calendar import Calendar
-from modules.selectors import make_day_selector, make_time_selector, make_event_selector  # pylint: disable=no-name-in-module
-# This is MY PERSONAL TOKEN for the bot :)
-from private.auth import PASSWORD
+from modules.selectors import (
+    make_day_selector,
+    make_time_selector,
+    make_event_selector,
+)  # pylint: disable=no-name-in-module
 
 
 # ================ Initializing the bot ================= #
@@ -17,7 +19,7 @@ intents = discord.Intents.default()
 intents.message_content = True
 # pylint: enable=assigning-non-slot
 
-bot = commands.Bot(intents=intents, command_prefix='>>')
+bot = commands.Bot(intents=intents, command_prefix=">>")
 
 # Creating a calendar object for storing data
 bot.calendar = Calendar()
@@ -25,25 +27,24 @@ bot.calendar = Calendar()
 
 # ================ Commands ================= #
 
+
 @bot.command()
 async def my_schedule(ctx):
-    '''
+    """
     Return the current scheduler logged for the requesting user
-    '''
-    await ctx.send(
-        bot.calendar.usr_sched_as_str(ctx.author)
-    )
+    """
+    await ctx.send(bot.calendar.usr_sched_as_str(ctx.author))
 
 
 @bot.command()
 async def enter_times(ctx):
-    '''
+    """
     Allow users to enter time the timeslots they are available for
-    '''
+    """
     select_day = make_day_selector()
     select_time = make_time_selector()
     button = Button(
-        label='Clear',
+        label="Clear",
         style=discord.ButtonStyle.green,
     )
 
@@ -54,62 +55,63 @@ async def enter_times(ctx):
 
     async def callback_day(interaction):
         select_day.placeholder = select_day.values[0]
-        select_time.placeholder = f'Selecting for {select_day.values[0]}'
-        button.label = f'Clear {select_day.placeholder}'
+        select_time.placeholder = f"Selecting for {select_day.values[0]}"
+        button.label = f"Clear {select_day.placeholder}"
         await interaction.response.edit_message(
-            content=bot.calendar.get_avail_days(ctx.author),
-            view=view
+            content=bot.calendar.get_avail_days(ctx.author), view=view
         )
+
     select_day.callback = callback_day
 
     async def callback_time(interaction):
-        select_time.placeholder = f'Time chosen for {select_day.placeholder}'
-        button.label = f'Clear {select_day.placeholder}'
+        select_time.placeholder = f"Time chosen for {select_day.placeholder}"
+        button.label = f"Clear {select_day.placeholder}"
         bot.calendar.update(
             ctx.author, select_day.placeholder, select_time.values)
         await interaction.response.edit_message(
-            content=bot.calendar.get_avail_days(ctx.author),
-            view=view
+            content=bot.calendar.get_avail_days(ctx.author), view=view
         )
+
     select_time.callback = callback_time
 
     async def callback_button(interaction):
         bot.calendar.update(ctx.author, select_day.placeholder, [])
-        button.label = f'Cleared {select_day.placeholder}'
+        button.label = f"Cleared {select_day.placeholder}"
         await interaction.response.edit_message(
-            content=bot.calendar.get_avail_days(ctx.author),
-            view=view)
+            content=bot.calendar.get_avail_days(ctx.author), view=view
+        )
+
     button.callback = callback_button
 
-    await ctx.send('Enter Your Availability', view=view)
+    await ctx.send("Enter Your Availability", view=view)
 
 
 @bot.command()
 async def results(ctx):
-    '''
+    """
     Return the best timeslots (the ones with the msot people available)
-    '''
+    """
     await ctx.send(bot.calendar.best_to_str())
 
 
 @bot.command()
 async def reset(ctx):
-    '''
+    """
     Clear the calendar (now open to a new event)
-    '''
+    """
     bot.calendar = Calendar()
-    await ctx.send('bot is reset')
+    await ctx.send("bot is reset")
 
 
 @bot.command()
 async def schedule(ctx):
-    '''
+    """
     Selector to choose an event time
-    '''
+    """
     view = View()
     timeslots = bot.calendar.find_best()
     if not timeslots:
-        await ctx.send('No Entered Data', view=view)
+        await ctx.send("No Entered Data", view=view)
         return
 
     selector = make_event_selector(timeslots)
@@ -118,20 +120,25 @@ async def schedule(ctx):
 
     async def callback_day(interaction):
         choice = int(selector.values[0])
-        await interaction.response.edit_message(
-            view=view
-        )
+        await interaction.response.edit_message(content="Time Selected!", view=view)
         await ctx.guild.create_scheduled_event(
             name="event",
             start_time=timeslots[choice].convert_datetime(),
             end_time=timeslots[choice].convert_datetime() + timedelta(hours=1),
-            description='Test event generated by bot',
-            location='Discord'
+            description="Test event generated by bot",
+            location="Discord",
         )
+
     selector.callback = callback_day
 
-    await ctx.send('Selector Your Timeslot', view=view)
+    await ctx.send("Selector Your Timeslot", view=view)
+
 
 # ================ Run the Bot ================= #
-if __name__ == '__main__':
-    bot.run(PASSWORD)
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+    import os
+
+    load_dotenv()
+    # Running the bot w/ the the auth token
+    bot.run(os.getenv("AUTH_TOKEN"))
